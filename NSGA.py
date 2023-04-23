@@ -1,5 +1,6 @@
 import coverage
 import inspect
+import numpy as np
 from pymoo.algorithms.moo.nsga2 import NSGA2
 from pymoo.core.problem import ElementwiseProblem
 from pymoo.optimize import minimize
@@ -7,6 +8,7 @@ from pymoo.core.sampling import Sampling
 from pymoo.core.duplicate import ElementwiseDuplicateElimination
 from pymoo.core.mutation import Mutation
 from pymoo.operators.selection.tournament import TournamentSelection
+from pymoo.core.crossover import Crossover
 
 from BucketList import bucket_list
 from Calculator import quadratic
@@ -23,7 +25,7 @@ class MyProblem(ElementwiseProblem):
         self.upper_bound = upper_bound
         self.tmp = 1
         self.pop_size = 20
-        self.ff = 0
+        self.f1_score = 0
 
         super().__init__(n_var=(self.n_parameters + 1) * n_cases, n_obj=3)
 
@@ -48,17 +50,17 @@ class MyProblem(ElementwiseProblem):
         f2 = -branches_covered
         f3 = np.sum(x[:, self.n_parameters])
 
-        # print(f"Line covered: {lines_covered}, Branches covered: {branches_covered}, #: {f3}")
+        print(f"Line covered: {lines_covered}, Branches covered: {branches_covered}, #: {f3}")
 
         out["F"] = np.column_stack([f1, f2, f3])
 
         if self.tmp == self.pop_size:
-            print('Average:', self.ff / self.pop_size)
+            print('Average:', self.f1_score / self.pop_size)
             self.tmp = 1
-            self.ff = 0
+            self.f1_score = 0
         else:
             self.tmp += 1
-            self.ff += f1
+            self.f1_score += f1
 
 
 def binary_tournament(pop, P, **kwargs):
@@ -69,26 +71,14 @@ def binary_tournament(pop, P, **kwargs):
         raise Exception("Only pressure=2 allowed for binary tournament!")
 
     # the result this function returns
-
     S = np.full(n_tournaments, -1, dtype=int)
 
     # now do all the tournaments
     for i in range(n_tournaments):
         a, b = P[i]
 
-        # if the first individual is better, choose it
-        # if pop[a].F < pop[b].F:
-        #     S[i] = a
-
-        # otherwise take the other individual
-        # else:
-        #     S[i] = b
-
         aF = pop[a].F
         bF = pop[b].F
-
-        # print(aF)
-        # print(bF)
 
         S[i] = b
         for j in range(len(aF)):
@@ -100,7 +90,6 @@ def binary_tournament(pop, P, **kwargs):
 
     return S
 
-selection = TournamentSelection(pressure=2, func_comp=binary_tournament)
 
 class MySampling(Sampling):
 
@@ -141,10 +130,6 @@ class MyDuplicateElimination(ElementwiseDuplicateElimination):
             return True
         return False
 
-import random
-import numpy as np
-from pymoo.core.crossover import Crossover
-
 class MyCrossover(Crossover):
     def __init__(self):
         self.n_parents = 2
@@ -157,12 +142,9 @@ class MyCrossover(Crossover):
 
         X = X.reshape(n_parents, n_matings, problem.n_cases, problem.n_parameters+1)
         Y = np.full_like(X, None, dtype=object)
-        for k in range(n_matings):
-            # get the first and the second parent
-            # a, b = X[0, k, :], X[1, k, :]
 
-            midpoint = np.random.randint(0, n_var)
-            a = X[0, k, :midpoint, :]
+        for k in range(n_matings):
+            midpoint = np.random.randint(0, problem.n_cases + 1)
             Y[0,k,:] = np.concatenate((X[0, k, :midpoint,:], X[1, k, midpoint:,:]))
             Y[1,k,:] = np.concatenate((X[1, k, :midpoint,:], X[0, k, midpoint:,:]))
 
@@ -175,7 +157,6 @@ class MyMutation(Mutation):
         super().__init__()
 
     def _do(self, problem, X, **kwargs):
-        # print(X)
         X = X.reshape(len(X), problem.n_cases, problem.n_parameters + 1)
         for i in range(len(X)):
             for j in range(problem.n_cases):
@@ -195,17 +176,17 @@ problem = MyProblem(method=bucket_list,
                     lower_bound= np.full((len(inspect.signature(bucket_list).parameters),), 1),
                     upper_bound = np.full((len(inspect.signature(bucket_list).parameters),), 1500))
 
-algorithm = NSGA2(pop_size=200,
+algorithm = NSGA2(pop_size=50,
                   sampling=MySampling(),
                   crossover=MyCrossover(),
                   mutation=MyMutation(),
-                  selection=selection,
+                  selection=TournamentSelection(pressure=2, func_comp=binary_tournament),
                   eliminate_duplicates=False)
                   # eliminate_duplicates=MyDuplicateElimination(problem.n_cases, problem.n_parameters))
 
 res = minimize(problem,
                algorithm,
-               ("n_gen", 20),
+               ("n_gen", 50),
                verbose=False,
                seed=1)
 
