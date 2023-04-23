@@ -1,3 +1,5 @@
+import time
+
 import coverage
 import inspect
 import numpy as np
@@ -9,6 +11,7 @@ from pymoo.core.duplicate import ElementwiseDuplicateElimination
 from pymoo.core.mutation import Mutation
 from pymoo.operators.selection.tournament import TournamentSelection
 from pymoo.core.crossover import Crossover
+from Util import count_lines
 
 from BucketList import bucket_list
 from Calculator import quadratic
@@ -171,6 +174,7 @@ class MyMutation(Mutation):
         return X
 
 if __name__ == '__main__':
+    start_time = time.time()
     problem = MyProblem(method=bucket_list,
                         n_cases=50,
                         lower_bound= np.full((len(inspect.signature(bucket_list).parameters),), 1),
@@ -184,6 +188,7 @@ if __name__ == '__main__':
                     eliminate_duplicates=False)
                     # eliminate_duplicates=MyDuplicateElimination(problem.n_cases, problem.n_parameters))
 
+
     res = minimize(problem,
                 algorithm,
                 ("n_gen", 50),
@@ -191,9 +196,12 @@ if __name__ == '__main__':
                 seed=1)
 
     X = res.X
+    end_time = time.time()
 
-
-    print(f"Function values: {res.F}")
-    print(f"Design variables: {res.X}")
+    total_lines = count_lines(inspect.getfile(bucket_list))
+    print(f'Function values: {res.F}')
+    print(f'Design variables: {res.X}')
+    print(f'Line coverage: {- res.F[0, 0] * 100 / total_lines} %')
+    print(f'Time elapsed: {end_time - start_time} seconds')
 
 

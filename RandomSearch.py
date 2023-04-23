@@ -42,7 +42,7 @@ best_lines = 0
 best_branches = 0
 best_n_cases = 50
 
-for _ in range(1000):
+for _ in range(2500):
     x = random_population(n_cases, n_parameters, lower_bound, upper_bound)
     line, branch, cases = evaluate(x, n_parameters)
     if line >= best_lines and branch >= best_branches and cases <= best_n_cases:
