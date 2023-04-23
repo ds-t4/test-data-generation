@@ -170,30 +170,30 @@ class MyMutation(Mutation):
         X = X.reshape(len(X), problem.n_var)
         return X
 
+if __name__ == '__main__':
+    problem = MyProblem(method=bucket_list,
+                        n_cases=50,
+                        lower_bound= np.full((len(inspect.signature(bucket_list).parameters),), 1),
+                        upper_bound = np.full((len(inspect.signature(bucket_list).parameters),), 1500))
 
-problem = MyProblem(method=bucket_list,
-                    n_cases=50,
-                    lower_bound= np.full((len(inspect.signature(bucket_list).parameters),), 1),
-                    upper_bound = np.full((len(inspect.signature(bucket_list).parameters),), 1500))
+    algorithm = NSGA2(pop_size=50,
+                    sampling=MySampling(),
+                    crossover=MyCrossover(),
+                    mutation=MyMutation(),
+                    selection=TournamentSelection(pressure=2, func_comp=binary_tournament),
+                    eliminate_duplicates=False)
+                    # eliminate_duplicates=MyDuplicateElimination(problem.n_cases, problem.n_parameters))
 
-algorithm = NSGA2(pop_size=50,
-                  sampling=MySampling(),
-                  crossover=MyCrossover(),
-                  mutation=MyMutation(),
-                  selection=TournamentSelection(pressure=2, func_comp=binary_tournament),
-                  eliminate_duplicates=False)
-                  # eliminate_duplicates=MyDuplicateElimination(problem.n_cases, problem.n_parameters))
+    res = minimize(problem,
+                algorithm,
+                ("n_gen", 50),
+                verbose=False,
+                seed=1)
 
-res = minimize(problem,
-               algorithm,
-               ("n_gen", 50),
-               verbose=False,
-               seed=1)
-
-X = res.X
+    X = res.X
 
 
-print(f"Function values: {res.F}")
-print(f"Design variables: {res.X}")
+    print(f"Function values: {res.F}")
+    print(f"Design variables: {res.X}")
 
 
