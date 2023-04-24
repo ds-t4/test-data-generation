@@ -4,7 +4,7 @@ import coverage
 import inspect
 import numpy as np
 from pymoo.algorithms.moo.nsga2 import NSGA2
-from pymoo.core.problem import ElementwiseProblem
+from pymoo.core.problem import ElementwiseProblem, StarmapParallelization
 from pymoo.optimize import minimize
 from pymoo.core.sampling import Sampling
 from pymoo.core.duplicate import ElementwiseDuplicateElimination
@@ -53,17 +53,17 @@ class MyProblem(ElementwiseProblem):
         f2 = -branches_covered
         f3 = np.sum(x[:, self.n_parameters])
 
-        print(f"Line covered: {lines_covered}, Branches covered: {branches_covered}, #: {f3}")
+        # print(f"Line covered: {lines_covered}, Branches covered: {branches_covered}, #: {f3}")
 
         out["F"] = np.column_stack([f1, f2, f3])
 
-        if self.tmp == self.pop_size:
-            print('Average:', self.f1_score / self.pop_size)
-            self.tmp = 1
-            self.f1_score = 0
-        else:
-            self.tmp += 1
-            self.f1_score += f1
+        # if self.tmp == self.pop_size:
+        #     # print('Average:', self.f1_score / self.pop_size)
+        #     self.tmp = 1
+        #     self.f1_score = 0
+        # else:
+        #     self.tmp += 1
+        #     self.f1_score += f1
 
 
 def binary_tournament_pareto(pop, P, **kwargs):
@@ -86,24 +86,14 @@ def binary_tournament_pareto(pop, P, **kwargs):
         S[i] = a
         flag = True
         for j in range(len(aF)):
-            if aF[j] >= bF[j]:
-                if j == 0:
-                    flag = False
-                elif flag:
-                    break
+            if aF[j] > bF[j] and j == 0:
+                flag = False
+            elif aF[j] < bF[j]:
+                flag = True
+                break
         if not flag:
             S[i] = b
 
-        # S[i] = b
-        # flag = False
-        # for j in range(len(aF)):
-        #     if aF[j] <= bF[j]:
-        #         if j == 0:
-        #             flag = True
-        #         elif not flag:
-        #             break
-        # if flag:
-        #     S[i] = a
     return S
 
 
@@ -179,11 +169,6 @@ class MyDuplicateElimination(ElementwiseDuplicateElimination):
         return False
 
 
-import random
-import numpy as np
-from pymoo.core.crossover import Crossover
-
-
 class MyCrossover(Crossover):
     def __init__(self):
         self.n_parents = 2
@@ -227,10 +212,11 @@ class MyMutation(Mutation):
 
 if __name__ == '__main__':
     start_time = time.time()
+
     problemA = MyProblem(method=bucket_list,
                          n_cases=50,
                          lower_bound=np.full((len(inspect.signature(bucket_list).parameters),), 1),
-                         upper_bound=np.full((len(inspect.signature(bucket_list).parameters),), 2500))
+                         upper_bound=np.full((len(inspect.signature(bucket_list).parameters),), 1500))
 
     problemB = MyProblem(method=quadratic,
                          n_cases=50,
@@ -248,8 +234,7 @@ if __name__ == '__main__':
     res = minimize(problemA,
                    algorithm,
                    ("n_gen", 50),
-                   verbose=False,
-                   seed=1)
+                   verbose=False)
 
     X = res.X
     end_time = time.time()
