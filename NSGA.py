@@ -28,7 +28,7 @@ class MyProblem(ElementwiseProblem):
         super().__init__(n_var=(self.n_parameters + 1) * n_cases, n_obj=3)
 
     def _evaluate(self, x, out, *args, **kwargs):
-        x = x.reshape(self. n_cases, self.n_parameters + 1)
+        x = x.reshape(self.n_cases, self.n_parameters + 1)
 
         cov = coverage.Coverage(branch=True)
         cov.start()
@@ -61,7 +61,7 @@ class MyProblem(ElementwiseProblem):
             self.ff += f1
 
 
-def binary_tournament(pop, P, **kwargs):
+def binary_tournament_pareto(pop, P, **kwargs):
     # The P input defines the tournaments and competitors
     n_tournaments, n_competitors = P.shape
 
@@ -87,8 +87,47 @@ def binary_tournament(pop, P, **kwargs):
         aF = pop[a].F
         bF = pop[b].F
 
-        # print(aF)
-        # print(bF)
+        S[i] = a
+        flag = True
+        for j in range(len(aF)):
+            if aF[j] >= bF[j]:
+                if j == 0:
+                    flag = False
+                elif flag:
+                    break
+        if not flag:
+            S[i] = b
+
+        # S[i] = b
+        # flag = False
+        # for j in range(len(aF)):
+        #     if aF[j] <= bF[j]:
+        #         if j == 0:
+        #             flag = True
+        #         elif not flag:
+        #             break
+        # if flag:
+        #     S[i] = a
+    return S
+
+
+def binary_tournament_coverage_focus(pop, P, **kwargs):
+    # The P input defines the tournaments and competitors
+    n_tournaments, n_competitors = P.shape
+
+    if n_competitors != 2:
+        raise Exception("Only pressure=2 allowed for binary tournament!")
+
+    # the result this function returns
+
+    S = np.full(n_tournaments, -1, dtype=int)
+
+    # now do all the tournaments
+    for i in range(n_tournaments):
+        a, b = P[i]
+
+        aF = pop[a].F
+        bF = pop[b].F
 
         S[i] = b
         for j in range(len(aF)):
@@ -97,10 +136,12 @@ def binary_tournament(pop, P, **kwargs):
                 break
             elif aF[j] > bF[j]:
                 break
-
     return S
 
-selection = TournamentSelection(pressure=2, func_comp=binary_tournament)
+
+selectionA = TournamentSelection(pressure=2, func_comp=binary_tournament_pareto)
+selectionB = TournamentSelection(pressure=2, func_comp=binary_tournament_coverage_focus)
+
 
 class MySampling(Sampling):
 
@@ -109,7 +150,8 @@ class MySampling(Sampling):
         for _ in range(n_samples):
             individual = []
             for _ in range(problem.n_cases):
-                test_inputs = [np.random.randint(problem.lower_bound[i], problem.upper_bound[i]) for i in range(problem.n_parameters)]
+                test_inputs = [np.random.randint(problem.lower_bound[i], problem.upper_bound[i]) for i in
+                               range(problem.n_parameters)]
                 test_inputs.append(1)
                 individual.append(test_inputs)
             X.append(individual)
@@ -124,7 +166,6 @@ class MyDuplicateElimination(ElementwiseDuplicateElimination):
         super().__init__()
         self.n_cases = n_cases
         self.n_parameters = n_parameters
-
 
     def is_equal(self, a, b):
         a_reshape = a.X.reshape(self.n_cases, self.n_parameters + 1)
@@ -141,9 +182,11 @@ class MyDuplicateElimination(ElementwiseDuplicateElimination):
             return True
         return False
 
+
 import random
 import numpy as np
 from pymoo.core.crossover import Crossover
+
 
 class MyCrossover(Crossover):
     def __init__(self):
@@ -155,16 +198,16 @@ class MyCrossover(Crossover):
         # The input of has the following shape (n_parents, n_matings(population size), n_var (+1))
         n_parents, n_matings, n_var = X.shape
 
-        X = X.reshape(n_parents, n_matings, problem.n_cases, problem.n_parameters+1)
+        X = X.reshape(n_parents, n_matings, problem.n_cases, problem.n_parameters + 1)
         Y = np.full_like(X, None, dtype=object)
         for k in range(n_matings):
             # get the first and the second parent
             # a, b = X[0, k, :], X[1, k, :]
 
-            midpoint = np.random.randint(0, n_var)
+            midpoint = np.random.randint(0, problem.n_cases + 1)
             a = X[0, k, :midpoint, :]
-            Y[0,k,:] = np.concatenate((X[0, k, :midpoint,:], X[1, k, midpoint:,:]))
-            Y[1,k,:] = np.concatenate((X[1, k, :midpoint,:], X[0, k, midpoint:,:]))
+            Y[0, k, :] = np.concatenate((X[0, k, :midpoint, :], X[1, k, midpoint:, :]))
+            Y[1, k, :] = np.concatenate((X[1, k, :midpoint, :], X[0, k, midpoint:, :]))
 
         Y = Y.reshape(self.n_offsprings, n_matings, n_var)
         return Y
@@ -190,29 +233,32 @@ class MyMutation(Mutation):
         return X
 
 
-problem = MyProblem(method=bucket_list,
-                    n_cases=50,
-                    lower_bound= np.full((len(inspect.signature(bucket_list).parameters),), 1),
-                    upper_bound = np.full((len(inspect.signature(bucket_list).parameters),), 1500))
+problemA = MyProblem(method=bucket_list,
+                     n_cases=50,
+                     lower_bound=np.full((len(inspect.signature(bucket_list).parameters),), 1),
+                     upper_bound=np.full((len(inspect.signature(bucket_list).parameters),), 2500))
 
-algorithm = NSGA2(pop_size=200,
+problemB = MyProblem(method=quadratic,
+                     n_cases=50,
+                     lower_bound=np.full((len(inspect.signature(quadratic).parameters),), 1),
+                     upper_bound=np.full((len(inspect.signature(quadratic).parameters),), 2000))
+
+algorithm = NSGA2(pop_size=100,
                   sampling=MySampling(),
                   crossover=MyCrossover(),
                   mutation=MyMutation(),
-                  selection=selection,
-                  eliminate_duplicates=False)
-                  # eliminate_duplicates=MyDuplicateElimination(problem.n_cases, problem.n_parameters))
+                  selection=selectionA,
+                  eliminate_duplicates=False,
+                  seed=42)
+# eliminate_duplicates=MyDuplicateElimination(problem.n_cases, problem.n_parameters))
 
-res = minimize(problem,
+res = minimize(problemA,
                algorithm,
-               ("n_gen", 20),
+               ("n_gen", 50),
                verbose=False,
                seed=1)
 
 X = res.X
 
-
 print(f"Function values: {res.F}")
 print(f"Design variables: {res.X}")
-
-
