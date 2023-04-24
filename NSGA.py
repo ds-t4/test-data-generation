@@ -242,5 +242,5 @@ if __name__ == '__main__':
     total_lines = count_lines(inspect.getfile(bucket_list))
     print(f'Function values: {res.F}')
     print(f'Design variables: {res.X}')
-    print(f'Line coverage: {- res.F[0, 0] * 100 / total_lines} %')
+    print(f'Line coverage: {- res.F[0, 0] * 100 / total_lines} %, total {total_lines}')
     print(f'Time elapsed: {end_time - start_time} seconds')
