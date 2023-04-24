@@ -79,7 +79,7 @@ if run_button:
         if case[-1]:
             best_cases_filtered.append(list(case[:-1]))
     st.session_state['best_cases_filtered'] = best_cases_filtered
-    st.write(f'Best test cases: {res.F}')
+    st.write(f'Number of best test cases: {len(best_cases_filtered)}')
     st.write(f'Best test cases: {best_cases_filtered}')
     st.write(f'Line coverage: {- res.F[0, 0] * 100 / total_lines} %')
     st.write(f'Time elapsed: {end_time - start_time} seconds')
