@@ -21,7 +21,7 @@ cov.stop()
 
 data = cov.get_data()
 
-filename = '/Users/cabbagebo/Documents/Spring 2023/18668/DataScience-T4/BucketList.py'
+filename = "D:\Spring 2023\\18668\Group Project\DataScience-T4\BucketList.py"
 
 print(len(data.lines(filename)))
 print(len(data.arcs(filename)))
