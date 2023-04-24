@@ -57,12 +57,25 @@ if run_button:
                    ("n_gen", n_generation),
                    verbose=False,
                    seed=1)
-
-    X = res.X
     end_time = time.time()
 
-    total_lines = count_lines(inspect.getfile(bucket_list))
-    st.write(f'Function values: {res.F}')
-    st.write(f'Design variables: {res.X}')
+    X = res.X
+
+    total_lines = count_lines(inspect.getfile(p))
+    max_cov, index, max_index = 0, 0, 0
+    for (cov, _, _) in res.F:
+        if -cov > max_cov:
+            max_cov = -cov
+            max_index = index
+        index += 1
+    best_cases = res.X[max_index]
+    n_args = len(inspect.signature(p).parameters)
+    best_cases = np.array(best_cases).reshape(len(best_cases) // (n_args+1), n_args+1)
+    best_cases_filtered = []
+    for case in best_cases:
+        if case[-1]:
+            best_cases_filtered.append(list(case[:-1]))
+    st.write(f'Best test cases: {res.F}')
+    st.write(f'Best test cases: {best_cases_filtered}')
     st.write(f'Line coverage: {- res.F[0, 0] * 100 / total_lines} %')
     st.write(f'Time elapsed: {end_time - start_time} seconds')
