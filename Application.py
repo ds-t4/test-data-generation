@@ -14,6 +14,9 @@ st.set_page_config(page_title="Test Generation", page_icon=":sunglasses:")
 st.title('Test Cases Generation')
 st.write("DSSE T4")
 
+if 'best_cases_filtered' not in st.session_state:
+    st.session_state['best_cases_filtered'] = []
+
 with st.form(key='background'):
     problem = st.radio('Problem', ('Bucket List', 'Quadratic Equation'))
     target_cases = st.number_input('Target number of test cases', min_value=1, max_value=100, value=30, step=1)
@@ -75,7 +78,13 @@ if run_button:
     for case in best_cases:
         if case[-1]:
             best_cases_filtered.append(list(case[:-1]))
+    st.session_state['best_cases_filtered'] = best_cases_filtered
     st.write(f'Best test cases: {res.F}')
     st.write(f'Best test cases: {best_cases_filtered}')
     st.write(f'Line coverage: {- res.F[0, 0] * 100 / total_lines} %')
     st.write(f'Time elapsed: {end_time - start_time} seconds')
+
+if st.button('Save the data as CSV'):
+    best_cases = np.array(st.session_state['best_cases_filtered'])
+    np.savetxt('best_cases.csv', best_cases, fmt='%.6f', delimiter=',')
+    st.write('Saved!')
