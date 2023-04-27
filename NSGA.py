@@ -201,7 +201,7 @@ class MyMutation(Mutation):
             for j in range(problem.n_cases):
                 r = np.random.random()
                 if r < 0.15:
-                    X[i][j][problem.n_parameters] = 1 - X[i][j][problem.n_parameters]
+                    X[i][j][problem.n_parameters] = (X[i][j][problem.n_parameters] + 1) % 2
                 elif r < 0.4:
                     index = np.random.randint(0, problem.n_parameters)
                     X[i][j][index] = np.random.randint(problem.lower_bound[index], problem.upper_bound[index])
