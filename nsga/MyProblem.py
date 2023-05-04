@@ -45,6 +45,7 @@ class MyProblem(ElementwiseProblem):
 
         out["F"] = np.column_stack([f1, f2, f3])
 
+        # Uncomment to print average line coverage
         # if self.tmp == self.pop_size:
         #     # print('Average:', self.f1_score / self.pop_size)
         #     self.tmp = 1
