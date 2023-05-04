@@ -1,5 +1,6 @@
 import coverage
-from BucketList import bucket_list
+
+from sample.BucketList import bucket_list
 
 cov = coverage.Coverage(branch=True)
 

@@ -1,8 +1,10 @@
-from BucketList import bucket_list
-import coverage
 import random
-import numpy as np
 import time
+
+import coverage
+import numpy as np
+
+from sample import bucket_list
 
 
 def evaluate(x, n_parameters):
@@ -22,6 +24,7 @@ def evaluate(x, n_parameters):
 
     return lines_covered, branches_covered, n_cases_used
 
+
 def random_population(n_cases, n_parameters, lower_bound, upper_bound):
     x = []
     for i in range(n_cases):
@@ -29,6 +32,7 @@ def random_population(n_cases, n_parameters, lower_bound, upper_bound):
         # random_individual.append(random.randint(0, 1))
         x.append(random_individual)
     return np.array(x)
+
 
 start_time = time.time()
 

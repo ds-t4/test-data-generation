@@ -6,9 +6,10 @@ import streamlit as st
 from pymoo.algorithms.moo.nsga2 import NSGA2
 from pymoo.optimize import minimize
 
-from BucketList import bucket_list
-from Calculator import quadratic
-from NSGA import MyProblem, MyCrossover, MyMutation, MySampling, count_lines, selectionA, selectionB
+from sample import bucket_list
+from sample import quadratic
+from Util import count_lines
+from nsga import MyProblem, MyCrossover, MyMutation, MySampling, selectionA, selectionB
 
 st.set_page_config(page_title="Test Generation", page_icon=":sunglasses:")
 st.title('Test Cases Generation')
@@ -73,7 +74,7 @@ if run_button:
         index += 1
     best_cases = res.X[max_index]
     n_args = len(inspect.signature(p).parameters)
-    best_cases = np.array(best_cases).reshape(len(best_cases) // (n_args+1), n_args+1)
+    best_cases = np.array(best_cases).reshape(len(best_cases) // (n_args + 1), n_args + 1)
     best_cases_filtered = []
     for case in best_cases:
         if case[-1]:

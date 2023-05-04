@@ -1,5 +1,6 @@
 import math
 
+
 def bucket_list(a, b, c, d, e, f):
     foo = 0
     a = math.floor(math.log2(a))
@@ -212,4 +213,3 @@ def bucket_list(a, b, c, d, e, f):
         foo += 0
         foo += 0
         foo += 0
-

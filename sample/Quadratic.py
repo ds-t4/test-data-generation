@@ -1,5 +1,6 @@
-import math
 import cmath
+import math
+
 
 def quadratic(a, b, c, d, e):
     P = (c ** 2 + 12 * a * e - 3 * b * d) / 9
@@ -42,6 +43,7 @@ def quadratic(a, b, c, d, e):
     roots.append(x3)
     roots.append(x4)
     return roots
+
 
 def cube_root(x):
     if x.imag == 0:
