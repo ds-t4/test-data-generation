@@ -1,5 +1,26 @@
 import math
 
+'''
+A sample Python script to test the generation process.
+The branches are not interrelated and the depth are not deep.
+However, it has 12 * 6 = 72 branches in total.
+Optimally, this all branches (as well as statements) could be covered with just 12 test cases.
+e.g. 
+        a       b       c       d       e       f
+#1      1       2       4       8       16      32
+#2      2       4       8       16      32      64
+#3      4       8       16      32      64      128
+#4      8       16      32      64      128     256
+#5      16      32      64      128     256     512
+#6      32      64      128     256     512     1024
+#7      64      128     256     512     1024    2048
+#8      128     256     512     1024    2048    1
+#9      256     512     1024    2048    1       2
+#10     512     1024    2048    1       2       4
+#11     1024    2048    1       2       4       8
+#12     2048    1       2       4       8       16
+'''
+
 
 def bucket_list(a, b, c, d, e, f):
     foo = 0

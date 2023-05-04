@@ -1,5 +1,12 @@
 import numpy as np
 from pymoo.core.mutation import Mutation
+'''
+Customized NSGA-II mutation
+For each test case (selected or not) in one individual,
+there is a 15% probability that it will be selected or unselected,
+and if that does not happen, 
+there is a 25% probability that one parameter will be changed randomly
+'''
 
 
 class MyMutation(Mutation):
