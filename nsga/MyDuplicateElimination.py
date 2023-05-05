@@ -8,6 +8,8 @@ class MyDuplicateElimination(ElementwiseDuplicateElimination):
         self.n_cases = n_cases
         self.n_parameters = n_parameters
 
+    # eliminate one individual when two individuals share the same valid test inputs
+
     def is_equal(self, a, b):
         a_reshape = a.X.reshape(self.n_cases, self.n_parameters + 1)
         b_reshape = b.X.reshape(self.n_cases, self.n_parameters + 1)
